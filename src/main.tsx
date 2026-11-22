@@ -31,7 +31,8 @@ import {
 } from "lucide-react";
 import { act, newMatch, pause, tick, type Command, type Mode } from "./game/match";
 import { heroArt } from "./ui/art";
-import { Board } from "./ui/Board";
+import { children, landing } from "./game/pieces";
+import { Board, type DropTrail } from "./ui/Board";
 import { Guide, Jewel, Rules } from "./ui/Guide";
 import { sound, unlock } from "./ui/audio";
 import "@fontsource-variable/fredoka/index.css";
@@ -40,6 +41,10 @@ import "./style.css";
 type Modal = "help" | "settings" | "restart" | "switch" | null;
 const modeName = { solo: "ひとり", cpu: "CPU対戦", practice: "練習" };
 const keys: Record<string, Command> = {
+  a: "left",
+  d: "right",
+  w: "rotate",
+  s: "down",
   ArrowLeft: "left",
   ArrowRight: "right",
   ArrowDown: "down",
@@ -83,6 +88,7 @@ function App() {
           matchMedia("(prefers-reduced-motion: reduce)").matches ? "low" : "full",
         ) === "low",
     );
+  const [trail, setTrail] = useState<DropTrail>();
   const [best, setBest] = useState(() => Number(setting("best", "0")) || 0);
   const hero = useRef<HTMLCanvasElement>(null),
     dialog = useRef<HTMLDialogElement>(null);
@@ -118,10 +124,15 @@ function App() {
     unlock();
     if (!mute && m.player.active) sound(cmd === "drop" ? "drop" : "move");
     fieldPanel.current?.focus({ preventScroll: true });
+    if (cmd === "drop" && p.active && !low) {
+      const distance = landing(p.active, p.board).y - p.active.y;
+      setTrail(distance > 0 ? { id: p.id, starts: children(p.active), distance } : undefined);
+    }
     act(m, cmd);
     update();
   }
   function restart(mode: Mode) {
+    setTrail(undefined);
     game.current = newMatch(mode, gameSeed());
     modalPause.current = false;
     setModal(null);
@@ -153,7 +164,7 @@ function App() {
   }
   useEffect(() => {
     const handle = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || modal) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || modal) return;
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (key === "Escape") {
         e.preventDefault();
@@ -388,7 +399,7 @@ function App() {
               </small>
             </div>
             <div className="well-wrap">
-              <Board field={p} low={low} paused={m.paused} label="プレイヤー盤面" />
+              <Board field={p} trail={trail} low={low} paused={m.paused} label="プレイヤー盤面" />
               {(m.result || (m.paused && !modal)) && (
                 <div className="overlay">
                   <span className="overlay-icon">{m.result ? <Trophy /> : <Pause />}</span>
@@ -476,8 +487,9 @@ function App() {
                 キーボード操作
               </h2>
               {[
-                ["移動", "←", "→"],
-                ["回転 / ゆっくり落下", "↑", "↓"],
+                ["左右に移動", "A / D", "← / →"],
+                ["回転", "W", "↑", "Z"],
+                ["1マス落下", "S", "↓"],
                 ["一気に落下", "Space"],
                 ["HOLD / 合成保留", "C", "B"],
               ].map(([name, ...k]) => (

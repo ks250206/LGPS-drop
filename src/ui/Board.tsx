@@ -3,7 +3,7 @@ import { CanvasRenderer, Container, Sprite, Texture } from "pixi.js";
 import { children, landing } from "../game/pieces";
 import { formulas, H, W, type Block } from "../game/chemistry";
 import type { Field } from "../game/match";
-import { tile, palette, gem } from "./art";
+import { tile, palette, crown, cavern } from "./art";
 import { Jewel } from "./Guide";
 
 const unit = 48,
@@ -16,34 +16,32 @@ function texture(b: Block) {
 function FinalCrystal() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const c = ref.current!.getContext("2d")!;
-    c.clearRect(0, 0, 240, 190);
-    c.save();
-    c.translate(72, 100);
-    c.rotate(-0.55);
-    gem(c, "P", -40, -64, 80, 120);
-    c.restore();
-    c.save();
-    c.translate(157, 100);
-    c.rotate(0.52);
-    gem(c, "S", -40, -59, 80, 118);
-    c.restore();
-    gem(c, "LGPS", 62, 8, 115, 153);
-    gem(c, "Li", 48, 102, 66, 69);
+    crown(ref.current!.getContext("2d")!);
   }, []);
   return <canvas ref={ref} className="final-crystal" width={240} height={190} />;
 }
+export interface DropTrail {
+  id: number;
+  starts: Block[];
+  distance: number;
+}
 export function Board({
   field: f,
+  trail,
   low,
   paused,
   label,
 }: {
   field: Field;
+  trail?: DropTrail;
   low: boolean;
   paused: boolean;
   label: string;
 }) {
+  const scenery = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    cavern(scenery.current!);
+  }, []);
   const host = useRef<HTMLDivElement>(null),
     live = useRef(f);
   live.current = f;
@@ -151,7 +149,26 @@ export function Board({
       role="img"
       aria-label={label + "、固定ブロック" + f.board.length + "個"}
     >
-      <div className="stars" />
+      <canvas className="cavern" width={432} height={672} ref={scenery} aria-hidden="true" />
+      <div className="well-grid" />
+      {trail && (
+        <div className="drop-trail" key={trail.id} aria-hidden="true">
+          {trail.starts.map((b) => (
+            <i
+              key={b.id}
+              style={
+                {
+                  left: ((b.x + 0.19) / W) * 100 + "%",
+                  top: ((b.y + 0.55) / H) * 100 + "%",
+                  width: (0.62 / W) * 100 + "%",
+                  height: (trail.distance / H) * 100 + "%",
+                  "--glint": palette[b.k][0],
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
       <div ref={host} className="pixi-host" />
       {error && (
         <div className="board-error">盤面を描画できません。ブラウザを更新してください。</div>
@@ -190,6 +207,7 @@ export function Board({
             } as React.CSSProperties
           }
         >
+          {final && !low && <i className="prism-rays" />}
           <i className="shock" />
           <i className="shock second" />
           {Array.from(

@@ -520,28 +520,27 @@ main {
   overflow: hidden;
   border-radius: 9px;
   background-color: #24243e;
-  background-image:
-    linear-gradient(to right, #a69bd620 1px, transparent 1px),
-    linear-gradient(to bottom, #a69bd620 1px, transparent 1px),
-    radial-gradient(ellipse at 20% 98%, #3e3457, transparent 68%), linear-gradient(#272840, #242439);
-  background-size:
-    calc(100% / 9) calc(100% / 14),
-    calc(100% / 9) calc(100% / 14),
-    100% 100%,
-    100% 100%;
   box-shadow:
     0 0 0 2px #4b405e,
     inset 0 2px 8px #151426;
 }
-.stars {
+.cavern,
+.well-grid {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.well-grid {
   background-image:
-    radial-gradient(circle at 15% 25%, #a295c766 0.85px, transparent 1.2px),
-    radial-gradient(circle at 81% 55%, #bfb2d55c 1px, transparent 1.4px);
-  background-size:
-    101px 113px,
-    127px 157px;
+    linear-gradient(to right, #d9deff21 1px, transparent 1px),
+    linear-gradient(to bottom, #d9deff21 1px, transparent 1px);
+  background-size: calc(100% / 9) calc(100% / 14);
+  box-shadow: inset 0 0 15px #120b2c55;
+}
+.quiet .cavern {
+  opacity: 0.56;
 }
 .pixi-host,
 .pixi-host canvas {
@@ -1651,4 +1650,78 @@ dialog::backdrop {
     600 13px "Fredoka Variable",
     sans-serif;
   text-shadow: 0 1px 3px #46395d;
+}
+
+.prism-rays {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 12deg,
+    transparent 0deg 12deg,
+    #bc9fff40 14deg,
+    transparent 18deg 29deg,
+    #9affe541 31deg,
+    transparent 35deg 43deg
+  );
+  mask-image: radial-gradient(circle, #000 4%, #000b 33%, transparent 69%);
+  animation: prism-bloom 0.73s ease-out both;
+}
+@keyframes prism-bloom {
+  0%,
+  10% {
+    transform: translate(-50%, -50%) scale(0.24) rotate(-12deg);
+    opacity: 0;
+  }
+  38% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.1) rotate(8deg);
+    opacity: 0.25;
+  }
+}
+.final-fx .shock {
+  border-color: #c7ffe9;
+  border-top-color: #e9c5ff;
+  border-right-color: #fff3bb;
+}
+
+.drop-trail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: trail-fade 0.24s ease-out both;
+}
+.drop-trail i {
+  position: absolute;
+  transform-origin: bottom;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--glint) 25%, transparent) 65%,
+    var(--glint) 99%,
+    white
+  );
+  clip-path: polygon(42% 0, 57% 0, 100% 96%, 73% 100%, 24% 100%, 0 96%);
+  animation: trail-shrink 0.24s ease-out both;
+}
+.quiet .drop-trail {
+  visibility: hidden;
+}
+@keyframes trail-fade {
+  0% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes trail-shrink {
+  0% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0.15);
+  }
 }
